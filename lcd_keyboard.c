@@ -54,7 +54,7 @@ int main(void)
     SystemCoreClockUpdate();
 
     // Set LCD pins as output
-    LPC_GPIO0->FIODIR = RS_CTRL | EN_CTRL | DT_CTRL;
+    LPC_GPIO0->FIODIR |= RS_CTRL | EN_CTRL | DT_CTRL;
 
     lcd_init();
     keyboard_init();
@@ -95,8 +95,10 @@ int main(void)
 
 void lcd_init(void)
 {
-    unsigned char cmds[] = {0x33, 0x32, 0x28, 0x0C, 0x01, 0x80};
-    for (i = 0; i < 6; i++) {
+    // New initialization command sequence (8-bit mode to 4-bit)
+    unsigned char cmds[] = {0x30, 0x30, 0x30, 0x20, 0x0C, 0x06, 0x01, 0x80};
+
+    for (i = 0; i < 8; i++) {
         lcd_cmd(cmds[i]);
         delay_lcd(3000);
     }
@@ -119,11 +121,11 @@ void lcd_data(unsigned char data)
 void lcd_write(void)
 {
     // Send upper nibble
-    temp2 = (temp1 & 0xF0) << 19; // upper 4 bits to P0.23–26
+    temp2 = (temp1 & 0xF0) << 19; // shift upper nibble to P0.23–26
     port_write();
 
     // Send lower nibble
-    temp2 = (temp1 & 0x0F) << 23; // lower 4 bits to P0.23–26
+    temp2 = (temp1 & 0x0F) << 23; // shift lower nibble to P0.23–26
     port_write();
 }
 
